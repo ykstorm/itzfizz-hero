@@ -1,41 +1,46 @@
 # itzfizz-hero
 
-This is a scroll-driven hero section I built for the Itzfizz Digital internship assignment.
+**Live site → https://itzfizz-hero-nu.vercel.app**
 
-The idea was to make something that feels alive — where the animations are tied to your scroll position rather than just playing once and stopping. Took a lot of tweaking to get the timing and easing to feel right.
+---
 
-**Live:** [add your Vercel link here after deploying]
+I built this as part of my internship assignment for Itzfizz Digital. The task was to make a scroll-driven hero section — basically a landing page where animations respond to how much you've scrolled, not just play once on load.
+
+Spent more time on this than I expected honestly. Getting the timing right so nothing feels rushed or too slow took a lot of back and forth. The headline stagger went through like 5 versions before it felt natural.
 
 ---
 
 ## What's on the page
 
-**Hero section**
-- The headline letters come in one by one when the page loads (GSAP stagger)
-- An orange underline grows in under the headline after the letters settle
-- Four stats at the bottom fade in as you scroll down to them
+**Hero section (top)**
+- Headline letters animate in one by one when the page loads
+- Orange underline grows in underneath after the letters finish
+- Four stats come in as you scroll down to them
+- Badge, tagline, two buttons
 
-**Scroll section**
-- The heading has a parallax effect — it moves up slightly slower than you scroll, which creates depth
-- The orange card slides in from the left as you scroll down to it
-- The project list items appear one at a time
+**Scroll section (below)**
+- Heading has a parallax effect — moves up slightly slower than you scroll, gives it some depth
+- Orange card slides in from the left as you scroll down to it
+- Project list items appear one at a time
+- Small floating card with a gentle loop animation
 
 ---
 
 ## Stack
 
-- **Next.js 14** — project structure + deployment
-- **React 18** — components
-- **Tailwind CSS** — layout and spacing
-- **GSAP + ScrollTrigger** — the scroll animations
-- **Framer Motion** — entrance animations, the floating card
+| Thing | What it does here |
+|---|---|
+| Next.js 14 | project structure, handles the build and deploy |
+| React 18 | breaking the page into components |
+| Tailwind CSS | layout and spacing |
+| GSAP + ScrollTrigger | scroll-linked animations in the second section |
+| Framer Motion | headline stagger, entrance animations, floating card |
 
 ---
 
 ## Running locally
-
 ```bash
-git clone https://github.com/YOUR_USERNAME/itzfizz-hero.git
+git clone https://github.com/ykstorm/itzfizz-hero.git
 cd itzfizz-hero
 npm install
 npm run dev
@@ -45,37 +50,46 @@ Open `http://localhost:3000`
 
 ---
 
-## Deploying (Vercel)
+## How the scroll animation actually works
 
-1. Push to GitHub
-2. Go to vercel.com → New Project → import the repo
-3. Hit deploy — that's it, no config needed for Next.js
+The main thing I wanted to figure out was how to tie an animation directly to scroll position rather than just triggering it once. GSAP's ScrollTrigger handles this with a property called `scrub`.
+
+`scrub: true` means scroll forward → animation goes forward, scroll back → animation reverses. Completely linked to where you are on the page.
+
+`scrub: 1` adds a small lag which makes fast scrolling feel smoother instead of snappy.
+
+For the parallax on the heading, the element just moves upward at a slower speed than the page. That small difference in speed is what makes it feel like it has depth.
+
+---
+
+## Why transform and not top/left
+
+All the animations move things using `transform: translateY()` instead of changing `top` or `left` directly.
+
+`transform` runs on the GPU so the browser doesn't have to redo its layout calculations on every frame. Animating `top` or `left` does cause that recalculation — you can feel it as choppiness, especially on scroll.
 
 ---
 
 ## Folder structure
-
 ```
 app/
-  layout.js       root layout
-  page.js         assembles the sections
+  layout.js             root HTML wrapper
+  page.js               puts the two sections together
 
 components/
-  HeroSection.js        hero layout, badge, buttons, scroll hint
-  AnimatedHeadline.js   the letter-by-letter headline
-  Stats.js              the four stat cards
-  ScrollSection.js      scroll-driven section with GSAP
+  HeroSection.js        hero layout — badge, headline, buttons, stats
+  AnimatedHeadline.js   letter-by-letter headline animation
+  Stats.js              four stat cards
+  ScrollSection.js      second section, all the GSAP scroll stuff
 
 styles/
-  globals.css     base styles, dark theme
+  globals.css           dark background, base resets, thin scrollbar
 ```
 
 ---
 
-## A few things I learned building this
+## Something that tripped me up
 
-Using `overflow: hidden` on a parent element will clip GSAP animations that start outside the element bounds — found this when the headline was completely invisible on load. Removed the clip and added padding instead.
+GSAP was silently failing on the headline — letters were in the DOM but completely invisible. The animation just never ran. Turns out it was a Next.js timing issue where GSAP was trying to grab the elements before hydration finished.
 
-`scrub: true` in ScrollTrigger directly links the animation to scroll position with no lag. `scrub: 1` or `scrub: 1.5` adds a small delay which makes fast movements feel smoother and more physical.
-
-`transform: translateY()` is always faster than animating `top` because transforms run on the GPU and don't force the browser to recalculate layout.
+Switched the headline to Framer Motion which handles this automatically and it worked straight away. Kept GSAP only for the scroll section where ScrollTrigger is actually needed.
